@@ -1,8 +1,3 @@
-const KEYS = { filmes: 'filmes', salas: 'salas', sessoes: 'sessoes', ingressos: 'ingressos' };
-function comprarIngresso(sessaoId) {
-  window.location.href = 'venda-ingressos.html?sessaoId=' + encodeURIComponent(sessaoId);
-}
-
 function loadArray(key) {
   try {
     const raw = localStorage.getItem(key);
@@ -114,11 +109,12 @@ function seedData() {
   saveArray(KEYS.ingressos, ingressos);
 }
 
-seedData();
+if (!localStorage.getItem(KEYS.filmes) && !localStorage.getItem(KEYS.salas) && !localStorage.getItem(KEYS.sessoes) && !localStorage.getItem(KEYS.ingressos)) { seedData(); }
 
 let capaBase64Atual = '';
 
-document.getElementById('capaFile').addEventListener('change', (e) => {
+const capaFileEl = document.getElementById('capaFile');
+if (capaFileEl) capaFileEl.addEventListener('change', (e) => {
   const file = e.target.files[0];
   const previewWrapper = document.getElementById('capaPreviewWrapper');
   if (!file) {
@@ -135,7 +131,8 @@ document.getElementById('capaFile').addEventListener('change', (e) => {
   reader.readAsDataURL(file);
 });
 
-document.getElementById('formFilme').addEventListener('submit', (e) => {
+const formFilmeEl = document.getElementById('formFilme');
+if (formFilmeEl) formFilmeEl.addEventListener('submit', (e) => {
   e.preventDefault();
   const statusMsg = document.getElementById('statusMsgFilme');
   const filme = {
@@ -183,7 +180,8 @@ function renderListaFilmes() {
   container.innerHTML = html;
 }
 
-document.getElementById('formSala').addEventListener('submit', (e) => {
+const formSalaEl = document.getElementById('formSala');
+if (formSalaEl) formSalaEl.addEventListener('submit', (e) => {
   e.preventDefault();
   const statusMsg = document.getElementById('statusMsgSala');
   const sala = {
@@ -240,13 +238,14 @@ function renderCadastroSessoes() {
 
   const avisoVazio = document.getElementById('avisoVazioSessao');
   avisoVazio.innerHTML = (filmes.length === 0 || salas.length === 0)
-    ? '<div class="alert" style="background-color:var(--panel-2);border:1px solid var(--border);color:var(--muted)">Cadastre pelo menos um <a href="#" onclick="navigate(\'filmes\');return false;" style="color:var(--gold)">filme</a> e uma <a href="#" onclick="navigate(\'salas\');return false;" style="color:var(--gold)">sala</a> antes de criar uma sessão.</div>'
+    ? '<div class="alert" style="background-color:var(--panel-2);border:1px solid var(--border);color:var(--muted)">Cadastre pelo menos um <a href="cadastro-filmes.html" style="color:var(--gold)">filme</a> e uma <a href="cadastro-salas.html" style="color:var(--gold)">sala</a> antes de criar uma sessão.</div>'
     : '';
 
   renderListaSessoes(filmes, salas);
 }
 
-document.getElementById('formSessao').addEventListener('submit', (e) => {
+const formSessaoEl = document.getElementById('formSessao');
+if (formSessaoEl) formSessaoEl.addEventListener('submit', (e) => {
   e.preventDefault();
   const statusMsg = document.getElementById('statusMsgSessao');
   const sessao = {
@@ -291,7 +290,7 @@ function renderSessoesDisponiveis() {
   const salas = loadArray(KEYS.salas);
 
   if (sessoes.length === 0) {
-    container.innerHTML = '<div class="empty-state">Nenhuma sessão disponível no momento. <a href="#" onclick="navigate(\'cadastro-sessoes\');return false;" style="color:var(--gold)">Cadastre uma sessão</a>.</div>';
+    container.innerHTML = '<div class="empty-state">Nenhuma sessão disponível no momento. <a href="cadastro-sessoes.html" style="color:var(--gold)">Cadastre uma sessão</a>.</div>';
     return;
   }
 
@@ -313,7 +312,7 @@ function renderSessoesDisponiveis() {
       </div>
       <div class="d-flex align-items-center gap-3">
         <div class="session-price">${formatMoney(s.preco)}</div>
-        <button class="btn btn-crimson" onclick="comprarIngresso('${s.id}')">Comprar Ingresso</button>
+        <a class="btn btn-crimson" href="venda-ingressos.html?sessaoId=${encodeURIComponent(s.id)}">Comprar Ingresso</a>
       </div>
     </div>`;
   });
@@ -455,7 +454,7 @@ function renderVendaIngressos(sessaoIdPreSelecionada) {
 
   const avisoVazio = document.getElementById('avisoVazioIngresso');
   avisoVazio.innerHTML = (sessoes.length === 0)
-    ? '<div class="alert" style="background-color:var(--panel-2);border:1px solid var(--border);color:var(--muted)">Nenhuma sessão cadastrada. <a href="#" onclick="navigate(\'cadastro-sessoes\');return false;" style="color:var(--gold)">Cadastre uma sessão</a> antes de vender ingressos.</div>'
+    ? '<div class="alert" style="background-color:var(--panel-2);border:1px solid var(--border);color:var(--muted)">Nenhuma sessão cadastrada. <a href="cadastro-sessoes.html" style="color:var(--gold)">Cadastre uma sessão</a> antes de vender ingressos.</div>'
     : '';
 
   document.getElementById('seatMapWrapper').style.display = 'none';
@@ -471,13 +470,15 @@ function renderVendaIngressos(sessaoIdPreSelecionada) {
   renderListaIngressos(sessoes, filmes, salas);
 }
 
-document.getElementById('sessaoSelect').addEventListener('change', (e) => {
+const sessaoSelectEl = document.getElementById('sessaoSelect');
+if (sessaoSelectEl) sessaoSelectEl.addEventListener('change', (e) => {
   const sessoes = loadArray(KEYS.sessoes);
   const sessao = sessoes.find(s => s.id === e.target.value);
   if (sessao) renderSeatMap(sessao);
 });
 
-document.getElementById('formIngresso').addEventListener('submit', (e) => {
+const formIngressoEl = document.getElementById('formIngresso');
+if (formIngressoEl) formIngressoEl.addEventListener('submit', (e) => {
   e.preventDefault();
   const statusMsg = document.getElementById('statusMsgIngresso');
 
@@ -537,51 +538,15 @@ function renderListaIngressos(sessoes, filmes, salas) {
   container.innerHTML = html;
 }
 
-// Compatibilidade entre páginas HTML separadas exigidas pelo projeto.
+// Inicialização para a versão com páginas HTML separadas.
 document.addEventListener('DOMContentLoaded', () => {
-  const page = location.pathname.split('/').pop() || 'index.html';
-
-  if (page === 'cadastro-filmes.html' && typeof initFilmes === 'function') initFilmes();
-  if (page === 'cadastro-salas.html' && typeof initSalas === 'function') initSalas();
-  if (page === 'cadastro-sessoes.html' && typeof initSessoes === 'function') initSessoes();
-  if (page === 'sessoes.html' && typeof initListaSessoes === 'function') initListaSessoes();
-  if (page === 'venda-ingressos.html' && typeof initIngressos === 'function') initIngressos();
-
-  const params = new URLSearchParams(location.search);
-  const sessaoId = params.get('sessaoId');
-  if (page === 'venda-ingressos.html' && sessaoId) {
-    const select = document.getElementById('sessaoIngresso') || document.getElementById('sessaoVenda');
-    if (select) select.value = sessaoId;
+  const page = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
+  if (page === 'cadastro-filmes.html' && typeof renderListaFilmes === 'function') renderListaFilmes();
+  if (page === 'cadastro-salas.html' && typeof renderListaSalas === 'function') renderListaSalas();
+  if (page === 'cadastro-sessoes.html' && typeof renderCadastroSessoes === 'function') renderCadastroSessoes();
+  if (page === 'sessoes.html' && typeof renderSessoesDisponiveis === 'function') renderSessoesDisponiveis();
+  if (page === 'venda-ingressos.html' && typeof renderVendaIngressos === 'function') {
+    const params = new URLSearchParams(location.search);
+    renderVendaIngressos(params.get('sessaoId') || undefined);
   }
 });
-
-function loadCinemaArray(key) {
-  try { return JSON.parse(localStorage.getItem(key) || '[]'); }
-  catch (e) { return []; }
-}
-
-function fillSelectByKey(selectId, key, labelFn) {
-  const el = document.getElementById(selectId);
-  if (!el) return;
-  const data = loadCinemaArray(key);
-  el.innerHTML = '<option value="">Selecione</option>';
-  data.forEach(item => {
-    const o = document.createElement('option');
-    o.value = item.id;
-    o.textContent = labelFn(item);
-    el.appendChild(o);
-  });
-}
-
-function initSessoes() {
-  fillSelectByKey('filmeSessao', 'filmes', f => f.titulo || f.nome || 'Filme');
-  fillSelectByKey('salaSessao', 'salas', s => s.nome || s.nomeSala || 'Sala');
-}
-
-function initListaSessoes() {
-  // The original page script handles the complete listing when available.
-}
-
-function initFilmes() {}
-function initSalas() {}
-function initIngressos() {}
